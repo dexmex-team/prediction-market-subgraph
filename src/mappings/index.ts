@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
-import { BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { concat } from '@graphprotocol/graph-ts/helper-functions'
-import { Bet, Market, Round, User } from '../types/schema'
+import { BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { concat } from "@graphprotocol/graph-ts/helper-functions";
+import { Bet, Market, Round, User } from "../types/schema";
 import {
   BetBear,
   BetBull,
@@ -9,111 +9,86 @@ import {
   EndRound,
   LockRound,
   Pause,
-  RatesUpdated,
   RewardsCalculated,
   StartRound,
-  Unpause
-} from '../types/Prediction/Prediction'
+  Unpause,
+} from "../types/DexMexPriceTestPrediction/Prediction";
 
-let ZERO_BI = BigInt.fromI32(0)
-let ONE_BI = BigInt.fromI32(1)
-let ZERO_BD = BigDecimal.fromString('0')
-let EIGHT_BD = BigDecimal.fromString('1e8')
-let EIGHTEEN_BD = BigDecimal.fromString('1e18')
-
-// Prediction fees
-let BASE_REWARD_RATE = BigInt.fromI32(3)
-let BASE_TREASURY_RATE = BigInt.fromI32(97)
+let ZERO_BI = BigInt.fromI32(0);
+let ONE_BI = BigInt.fromI32(1);
+let ZERO_BD = BigDecimal.fromString("0");
+let HUNDRED_BD = BigDecimal.fromString("100");
+let EIGHT_BD = BigDecimal.fromString("1e8");
+let EIGHTEEN_BD = BigDecimal.fromString("1e18");
 
 /**
  * PAUSE
  */
 
 export function handlePause(event: Pause): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    market = new Market('1')
-    market.epoch = event.params.epoch.toString()
-    market.paused = true
-    market.totalUsers = ZERO_BI
-    market.totalBets = ZERO_BI
-    market.totalBetsBull = ZERO_BI
-    market.totalBetsBear = ZERO_BI
-    market.totalETH = ZERO_BD
-    market.totalETHBull = ZERO_BD
-    market.totalETHBear = ZERO_BD
-    market.totalETHTreasury = ZERO_BD
-    market.rewardRate = BASE_REWARD_RATE
-    market.treasuryRate = BASE_TREASURY_RATE
-    market.save()
+    market = new Market("1");
+    market.epoch = event.params.epoch.toString();
+    market.paused = true;
+    market.totalUsers = ZERO_BI;
+    market.totalBets = ZERO_BI;
+    market.totalBetsBull = ZERO_BI;
+    market.totalBetsBear = ZERO_BI;
+    market.totalMATIC = ZERO_BD;
+    market.totalMATICBull = ZERO_BD;
+    market.totalMATICBear = ZERO_BD;
+    market.totalMATICTreasury = ZERO_BD;
+    market.totalBetsClaimed = ZERO_BI;
+    market.totalMATICClaimed = ZERO_BD;
+    market.winRate = HUNDRED_BD;
+    market.averageMATIC = ZERO_BD;
+    market.netMATIC = ZERO_BD;
+    market.save();
   }
-  market.epoch = event.params.epoch.toString()
-  market.paused = true
-  market.save()
+  market.epoch = event.params.epoch.toString();
+  market.paused = true;
+  market.save();
 
   // Pause event was called, cancelling rounds.
-  let round = Round.load(event.params.epoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round !== null) {
-    round.failed = true
-    round.save()
+    round.failed = true;
+    round.save();
 
     // Also fail the previous round because it will not complete.
-    let previousRound = Round.load(round.previous)
+    let previousRound = Round.load(round.previous);
     if (previousRound !== null) {
-      previousRound.failed = true
-      previousRound.save()
+      previousRound.failed = true;
+      previousRound.save();
     }
   }
 }
 
 export function handleUnpause(event: Unpause): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    market = new Market('1')
-    market.epoch = event.params.epoch.toString()
-    market.paused = false
-    market.totalUsers = ZERO_BI
-    market.totalBets = ZERO_BI
-    market.totalBetsBull = ZERO_BI
-    market.totalBetsBear = ZERO_BI
-    market.totalETH = ZERO_BD
-    market.totalETHBull = ZERO_BD
-    market.totalETHBear = ZERO_BD
-    market.totalETHTreasury = ZERO_BD
-    market.rewardRate = BASE_REWARD_RATE
-    market.treasuryRate = BASE_TREASURY_RATE
-    market.save()
+    market = new Market("1");
+    market.epoch = event.params.epoch.toString();
+    market.paused = false;
+    market.totalUsers = ZERO_BI;
+    market.totalBets = ZERO_BI;
+    market.totalBetsBull = ZERO_BI;
+    market.totalBetsBear = ZERO_BI;
+    market.totalMATIC = ZERO_BD;
+    market.totalMATICBull = ZERO_BD;
+    market.totalMATICBear = ZERO_BD;
+    market.totalMATICTreasury = ZERO_BD;
+    market.totalBetsClaimed = ZERO_BI;
+    market.totalMATICClaimed = ZERO_BD;
+    market.winRate = HUNDRED_BD;
+    market.averageMATIC = ZERO_BD;
+    market.netMATIC = ZERO_BD;
+    market.save();
   }
-  market.epoch = event.params.epoch.toString()
-  market.paused = false
-  market.save()
-}
-
-/**
- * MARKET
- */
-
-export function handleRatesUpdated(event: RatesUpdated): void {
-  let market = Market.load('1')
-  if (market === null) {
-    market = new Market('1')
-    market.epoch = event.params.epoch.toString()
-    market.paused = false
-    market.totalUsers = ZERO_BI
-    market.totalBets = ZERO_BI
-    market.totalBetsBull = ZERO_BI
-    market.totalBetsBear = ZERO_BI
-    market.totalETH = ZERO_BD
-    market.totalETHBull = ZERO_BD
-    market.totalETHBear = ZERO_BD
-    market.totalETHTreasury = ZERO_BD
-    market.rewardRate = BASE_REWARD_RATE
-    market.treasuryRate = BASE_TREASURY_RATE
-    market.save()
-  }
-  market.rewardRate = event.params.rewardRate
-  market.treasuryRate = event.params.treasuryRate
-  market.save()
+  market.epoch = event.params.epoch.toString();
+  market.paused = false;
+  market.save();
 }
 
 /**
@@ -121,219 +96,279 @@ export function handleRatesUpdated(event: RatesUpdated): void {
  */
 
 export function handleStartRound(event: StartRound): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    market = new Market('1')
-    market.epoch = event.params.epoch.toString()
-    market.paused = false
-    market.totalUsers = ZERO_BI
-    market.totalBets = ZERO_BI
-    market.totalBetsBull = ZERO_BI
-    market.totalBetsBear = ZERO_BI
-    market.totalETH = ZERO_BD
-    market.totalETHBull = ZERO_BD
-    market.totalETHBear = ZERO_BD
-    market.totalETHTreasury = ZERO_BD
-    market.rewardRate = BASE_REWARD_RATE
-    market.treasuryRate = BASE_TREASURY_RATE
-    market.save()
+    market = new Market("1");
+    market.epoch = event.params.epoch.toString();
+    market.paused = false;
+    market.totalUsers = ZERO_BI;
+    market.totalBets = ZERO_BI;
+    market.totalBetsBull = ZERO_BI;
+    market.totalBetsBear = ZERO_BI;
+    market.totalMATIC = ZERO_BD;
+    market.totalMATICBull = ZERO_BD;
+    market.totalMATICBear = ZERO_BD;
+    market.totalMATICTreasury = ZERO_BD;
+    market.totalBetsClaimed = ZERO_BI;
+    market.totalMATICClaimed = ZERO_BD;
+    market.winRate = HUNDRED_BD;
+    market.averageMATIC = ZERO_BD;
+    market.netMATIC = ZERO_BD;
+    market.save();
   }
+  market.epoch = event.params.epoch.toString();
+  market.save();
 
-  let round = Round.load(event.params.epoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round === null) {
-    round = new Round(event.params.epoch.toString())
-    round.epoch = event.params.epoch
-    round.previous = event.params.epoch.equals(ZERO_BI) ? null : event.params.epoch.minus(ONE_BI).toString()
-    round.startAt = event.block.timestamp
-    round.startBlock = event.block.number
-    round.startHash = event.transaction.hash
-    round.totalBets = ZERO_BI
-    round.totalAmount = ZERO_BD
-    round.bullBets = ZERO_BI
-    round.bullAmount = ZERO_BD
-    round.bearBets = ZERO_BI
-    round.bearAmount = ZERO_BD
-    round.save()
+    round = new Round(event.params.epoch.toString());
+    round.epoch = event.params.epoch;
+    round.previous = event.params.epoch.equals(ZERO_BI) ? null : event.params.epoch.minus(ONE_BI).toString();
+    round.startAt = event.block.timestamp;
+    round.startBlock = event.block.number;
+    round.startHash = event.transaction.hash;
+    round.totalBets = ZERO_BI;
+    round.totalAmount = ZERO_BD;
+    round.bullBets = ZERO_BI;
+    round.bullAmount = ZERO_BD;
+    round.bearBets = ZERO_BI;
+    round.bearAmount = ZERO_BD;
+    round.save();
   }
-
-  market.epoch = round.id
-  market.paused = false
-  market.save()
 }
 
 export function handleLockRound(event: LockRound): void {
-  let round = Round.load(event.params.epoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round === null) {
-    log.error('Tried to lock round without an existing round (epoch: {}).', [event.params.epoch.toString()])
+    log.error("Tried to lock round without an existing round (epoch: {}).", [event.params.epoch.toString()]);
   }
-
-  round.lockAt = event.block.timestamp
-  round.lockBlock = event.block.number
-  round.lockHash = event.transaction.hash
-  round.lockPrice = event.params.price.divDecimal(EIGHT_BD)
-  round.save()
+  round.lockAt = event.block.timestamp;
+  round.lockBlock = event.block.number;
+  round.lockHash = event.transaction.hash;
+  round.lockPrice = event.params.price.divDecimal(EIGHT_BD);
+  round.lockRoundId = event.params.roundId;
+  round.save();
 }
 
 export function handleEndRound(event: EndRound): void {
-  let round = Round.load(event.params.epoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round === null) {
-    log.error('Tried to end round without an existing round (epoch: {}).', [event.params.epoch.toString()])
+    log.error("Tried to end round without an existing round (epoch: {}).", [event.params.epoch.toString()]);
   }
-
-  round.endAt = event.block.timestamp
-  round.endBlock = event.block.number
-  round.endHash = event.transaction.hash
-  round.closePrice = event.params.price.divDecimal(EIGHT_BD)
+  round.closeAt = event.block.timestamp;
+  round.closeBlock = event.block.number;
+  round.closeHash = event.transaction.hash;
+  round.closePrice = event.params.price.divDecimal(EIGHT_BD);
+  round.closeRoundId = event.params.roundId;
 
   // Get round result based on lock/close price.
   if (round.closePrice.equals(round.lockPrice as BigDecimal)) {
-    round.position = 'House'
-  } else if (round.closePrice.gt(round.lockPrice as BigDecimal)) {
-    round.position = 'Bull'
-  } else if (round.closePrice.lt(round.lockPrice as BigDecimal)) {
-    round.position = 'Bear'
-  } else {
-    round.position = null
-  }
-  round.failed = false
+    round.position = "House";
 
-  round.save()
+    let market = Market.load("1");
+    if (market === null) {
+      log.error("Tried to query market after end round was called for a round (epoch: {})", [
+        event.params.epoch.toString(),
+      ]);
+    }
+    market.totalMATICTreasury = market.totalMATICTreasury.plus(round.totalAmount);
+    market.netMATIC = market.netMATIC.plus(round.totalAmount);
+    market.save();
+  } else if (round.closePrice.gt(round.lockPrice as BigDecimal)) {
+    round.position = "Bull";
+  } else if (round.closePrice.lt(round.lockPrice as BigDecimal)) {
+    round.position = "Bear";
+  } else {
+    round.position = null;
+  }
+  round.failed = false;
+
+  round.save();
 }
 
 export function handleBetBull(event: BetBull): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    log.error('Tried query market with bet (bear)', [])
+    log.error("Tried to query market with bet (Bull)", []);
   }
-  market.totalBets = market.totalBets.plus(ONE_BI)
-  market.totalBetsBull = market.totalBetsBull.plus(ONE_BI)
-  market.totalETH = market.totalETH.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  market.totalETHBull = market.totalETHBull.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  market.save()
+  market.totalBets = market.totalBets.plus(ONE_BI);
+  market.totalBetsBull = market.totalBetsBull.plus(ONE_BI);
+  market.totalMATIC = market.totalMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.totalMATICBull = market.totalMATICBull.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.winRate = market.totalBetsClaimed.divDecimal(market.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  market.averageMATIC = market.totalMATIC.div(market.totalBets.toBigDecimal());
+  market.netMATIC = market.netMATIC.minus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.save();
 
-  let round = Round.load(event.params.currentEpoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round === null) {
-    log.error('Tried to bet (bull) without an existing round (epoch: {}).', [event.params.currentEpoch.toString()])
+    log.error("Tried to bet (bull) without an existing round (epoch: {}).", [event.params.epoch.toString()]);
   }
-  round.totalBets = round.totalBets.plus(ONE_BI)
-  round.totalAmount = round.totalAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  round.bullBets = round.bullBets.plus(ONE_BI)
-  round.bullAmount = round.bullAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  round.save()
+  round.totalBets = round.totalBets.plus(ONE_BI);
+  round.totalAmount = round.totalAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  round.bullBets = round.bullBets.plus(ONE_BI);
+  round.bullAmount = round.bullAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  round.save();
 
   // Fail safe condition in case the user has not been created yet.
-  let user = User.load(event.params.sender.toHex())
+  let user = User.load(event.params.sender.toHex());
   if (user === null) {
-    user = new User(event.params.sender.toHex())
-    user.address = event.params.sender
-    user.createdAt = event.block.timestamp
-    user.updatedAt = event.block.timestamp
-    user.block = event.block.number
-    user.totalBets = ZERO_BI
-    user.totalETH = ZERO_BD
+    user = new User(event.params.sender.toHex());
+    user.createdAt = event.block.timestamp;
+    user.updatedAt = event.block.timestamp;
+    user.block = event.block.number;
+    user.totalBets = ZERO_BI;
+    user.totalBetsBull = ZERO_BI;
+    user.totalBetsBear = ZERO_BI;
+    user.totalMATIC = ZERO_BD;
+    user.totalMATICBull = ZERO_BD;
+    user.totalMATICBear = ZERO_BD;
+    user.totalBetsClaimed = ZERO_BI;
+    user.totalMATICClaimed = ZERO_BD;
+    user.winRate = HUNDRED_BD;
+    user.averageMATIC = ZERO_BD;
+    user.netMATIC = ZERO_BD;
 
-    market.totalUsers = market.totalUsers.plus(ONE_BI)
-    market.save()
+    market.totalUsers = market.totalUsers.plus(ONE_BI);
+    market.save();
   }
-  user.updatedAt = event.block.timestamp
-  user.totalBets = user.totalBets.plus(ONE_BI)
-  user.totalETH = user.totalETH.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  user.save()
+  user.updatedAt = event.block.timestamp;
+  user.totalBets = user.totalBets.plus(ONE_BI);
+  user.totalBetsBull = user.totalBetsBull.plus(ONE_BI);
+  user.totalMATIC = user.totalMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.totalMATICBull = user.totalMATICBull.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.winRate = user.totalBetsClaimed.divDecimal(user.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  user.averageMATIC = user.totalMATIC.div(user.totalBets.toBigDecimal());
+  user.netMATIC = user.netMATIC.minus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.save();
 
-  let betId = concat(event.params.sender, Bytes.fromI32(event.params.currentEpoch.toI32())).toHex()
-  let bet = new Bet(betId)
-  bet.round = round.id
-  bet.user = user.id
-  bet.hash = event.transaction.hash
-  bet.amount = event.params.amount.divDecimal(EIGHTEEN_BD)
-  bet.position = 'Bull'
-  bet.claimed = false
-  bet.createdAt = event.block.timestamp
-  bet.updatedAt = event.block.timestamp
-  bet.block = event.block.number
-  bet.save()
+  let betId = concat(event.params.sender, Bytes.fromI32(event.params.epoch.toI32())).toHex();
+  let bet = new Bet(betId);
+  bet.round = round.id;
+  bet.user = user.id;
+  bet.hash = event.transaction.hash;
+  bet.amount = event.params.amount.divDecimal(EIGHTEEN_BD);
+  bet.position = "Bull";
+  bet.claimed = false;
+  bet.createdAt = event.block.timestamp;
+  bet.updatedAt = event.block.timestamp;
+  bet.block = event.block.number;
+  bet.save();
 }
 
 export function handleBetBear(event: BetBear): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    log.error('Tried query market with bet (bear)', [])
+    log.error("Tried to query market with bet (Bear)", []);
   }
-  market.totalBets = market.totalBets.plus(ONE_BI)
-  market.totalBetsBear = market.totalBetsBear.plus(ONE_BI)
-  market.totalETH = market.totalETH.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  market.totalETHBear = market.totalETHBear.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  market.save()
+  market.totalBets = market.totalBets.plus(ONE_BI);
+  market.totalBetsBear = market.totalBetsBear.plus(ONE_BI);
+  market.totalMATIC = market.totalMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.totalMATICBear = market.totalMATICBear.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.winRate = market.totalBetsClaimed.divDecimal(market.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  market.averageMATIC = market.totalMATIC.div(market.totalBets.toBigDecimal());
+  market.netMATIC = market.netMATIC.minus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.save();
 
-  let round = Round.load(event.params.currentEpoch.toString())
+  let round = Round.load(event.params.epoch.toString());
   if (round === null) {
-    log.error('Tried to bet (bear) without an existing round (epoch: {}).', [event.params.currentEpoch.toString()])
+    log.error("Tried to bet (bear) without an existing round (epoch: {}).", [event.params.epoch.toString()]);
   }
-  round.totalBets = round.totalBets.plus(ONE_BI)
-  round.totalAmount = round.totalAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  round.bearBets = round.bearBets.plus(ONE_BI)
-  round.bearAmount = round.bearAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  round.save()
+  round.totalBets = round.totalBets.plus(ONE_BI);
+  round.totalAmount = round.totalAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  round.bearBets = round.bearBets.plus(ONE_BI);
+  round.bearAmount = round.bearAmount.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  round.save();
 
   // Fail safe condition in case the user has not been created yet.
-  let user = User.load(event.params.sender.toHex())
+  let user = User.load(event.params.sender.toHex());
   if (user === null) {
-    user = new User(event.params.sender.toHex())
-    user.address = event.params.sender
-    user.createdAt = event.block.timestamp
-    user.updatedAt = event.block.timestamp
-    user.block = event.block.number
-    user.totalBets = ZERO_BI
-    user.totalETH = ZERO_BD
+    user = new User(event.params.sender.toHex());
+    user.createdAt = event.block.timestamp;
+    user.updatedAt = event.block.timestamp;
+    user.block = event.block.number;
+    user.totalBets = ZERO_BI;
+    user.totalBetsBull = ZERO_BI;
+    user.totalBetsBear = ZERO_BI;
+    user.totalMATIC = ZERO_BD;
+    user.totalMATICBull = ZERO_BD;
+    user.totalMATICBear = ZERO_BD;
+    user.totalBetsClaimed = ZERO_BI;
+    user.totalMATICClaimed = ZERO_BD;
+    user.winRate = HUNDRED_BD;
+    user.averageMATIC = ZERO_BD;
+    user.netMATIC = ZERO_BD;
 
-    market.totalUsers = market.totalUsers.plus(ONE_BI)
-    market.save()
+    market.totalUsers = market.totalUsers.plus(ONE_BI);
+    market.save();
   }
-  user.updatedAt = event.block.timestamp
-  user.totalBets = user.totalBets.plus(ONE_BI)
-  user.totalETH = user.totalETH.plus(event.params.amount.divDecimal(EIGHTEEN_BD))
-  user.save()
+  user.updatedAt = event.block.timestamp;
+  user.totalBets = user.totalBets.plus(ONE_BI);
+  user.totalBetsBear = user.totalBetsBear.plus(ONE_BI);
+  user.totalMATIC = user.totalMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.totalMATICBear = user.totalMATICBear.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.winRate = user.totalBetsClaimed.divDecimal(user.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  user.averageMATIC = user.totalMATIC.div(user.totalBets.toBigDecimal());
+  user.netMATIC = user.netMATIC.minus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.save();
 
-  let betId = concat(event.params.sender, Bytes.fromI32(event.params.currentEpoch.toI32())).toHex()
-  let bet = new Bet(betId)
-  bet.round = round.id
-  bet.user = user.id
-  bet.hash = event.transaction.hash
-  bet.amount = event.params.amount.divDecimal(EIGHTEEN_BD)
-  bet.position = 'Bear'
-  bet.claimed = false
-  bet.createdAt = event.block.timestamp
-  bet.updatedAt = event.block.timestamp
-  bet.block = event.block.number
-  bet.save()
+  let betId = concat(event.params.sender, Bytes.fromI32(event.params.epoch.toI32())).toHex();
+  let bet = new Bet(betId);
+  bet.round = round.id;
+  bet.user = user.id;
+  bet.hash = event.transaction.hash;
+  bet.amount = event.params.amount.divDecimal(EIGHTEEN_BD);
+  bet.position = "Bear";
+  bet.claimed = false;
+  bet.createdAt = event.block.timestamp;
+  bet.updatedAt = event.block.timestamp;
+  bet.block = event.block.number;
+  bet.save();
 }
 
 export function handleClaim(event: Claim): void {
-  let betId = concat(event.params.sender, Bytes.fromI32(event.params.currentEpoch.toI32())).toHex()
-  let bet = Bet.load(betId)
-  if (bet !== null) {
-    bet.claimed = true
-    bet.claimedAmount = event.params.amount.divDecimal(EIGHTEEN_BD)
-    bet.claimedHash = event.transaction.hash
-    bet.updatedAt = event.block.timestamp
-    bet.save()
+  let betId = concat(event.params.sender, Bytes.fromI32(event.params.epoch.toI32())).toHex();
+  let bet = Bet.load(betId);
+  if (bet === null) {
+    log.error("Tried to query bet without an existing ID (betId: {})", [betId]);
   }
+  bet.claimed = true;
+  bet.claimedAt = event.block.timestamp;
+  bet.claimedBlock = event.block.number;
+  bet.claimedHash = event.transaction.hash;
+  bet.claimedMATIC = event.params.amount.divDecimal(EIGHTEEN_BD);
+  bet.claimedNetMATIC = event.params.amount.divDecimal(EIGHTEEN_BD).minus(bet.amount);
+  bet.updatedAt = event.block.timestamp;
+  bet.save();
+
+  let user = User.load(event.params.sender.toHex());
+  if (user === null) {
+    log.error("Tried to query user without an existing ID (address: {})", [event.params.sender.toHex()]);
+  }
+  user.totalBetsClaimed = user.totalBetsClaimed.plus(ONE_BI);
+  user.totalMATICClaimed = user.totalMATICClaimed.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.winRate = user.totalBetsClaimed.divDecimal(user.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  user.netMATIC = user.netMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  user.save();
+
+  let market = Market.load("1");
+  if (market === null) {
+    log.error("Tried to query market after a user claimed for a round (epoch: {})", [event.params.epoch.toString()]);
+  }
+  market.totalBetsClaimed = market.totalBetsClaimed.plus(ONE_BI);
+  market.totalMATICClaimed = market.totalMATICClaimed.plus(event.params.amount.divDecimal(EIGHTEEN_BD));
+  market.winRate = market.totalBetsClaimed.divDecimal(market.totalBets.toBigDecimal()).times(HUNDRED_BD);
+  market.netMATIC = market.netMATIC.plus(event.params.amount.divDecimal(EIGHTEEN_BD).minus(bet.amount));
+  market.save();
 }
 
 export function handleRewardsCalculated(event: RewardsCalculated): void {
-  let market = Market.load('1')
+  let market = Market.load("1");
   if (market === null) {
-    log.error('Tried query market after rewards were calculated for a round', [])
+    log.error("Tried to query market after rewards were calculated for a round (epoch: {})", [
+      event.params.epoch.toString(),
+    ]);
   }
-  market.totalETHTreasury = market.totalETHTreasury.plus(event.params.treasuryAmount.divDecimal(EIGHTEEN_BD))
-  market.save()
-
-  let round = Round.load(event.params.epoch.toString())
-  if (round === null) {
-    log.error('Tried query round (epoch: {}) after rewards were calculated for a round', [
-      event.params.epoch.toString()
-    ])
-  }
-  round.totalAmountTreasury = event.params.treasuryAmount.divDecimal(EIGHTEEN_BD)
-  round.save()
+  market.totalMATICTreasury = market.totalMATICTreasury.plus(event.params.treasuryAmount.divDecimal(EIGHTEEN_BD));
+  market.save();
 }

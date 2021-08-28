@@ -10,17 +10,24 @@ type Market @entity {
     epoch: Round
     paused: Boolean!
 
+    # Users
     totalUsers: BigInt!
+
+    # Bets
     totalBets: BigInt!
     totalBetsBull: BigInt!
     totalBetsBear: BigInt!
-    totalETH: BigDecimal!
-    totalETHBull: BigDecimal!
-    totalETHBear: BigDecimal!
-    totalETHTreasury: BigDecimal!
+    totalMATIC: BigDecimal!
+    totalMATICBull: BigDecimal!
+    totalMATICBear: BigDecimal!
+    totalMATICTreasury: BigDecimal!
 
-    rewardRate: BigInt!
-    treasuryRate: BigInt!
+    # Statistics
+    totalBetsClaimed: BigInt!
+    totalMATICClaimed: BigDecimal!
+    winRate: BigDecimal!
+    averageMATIC: BigDecimal!
+    netMATIC: BigDecimal!
 }
 
 type Round @entity {
@@ -42,17 +49,18 @@ type Round @entity {
     lockBlock: BigInt
     lockHash: Bytes
     lockPrice: BigDecimal
+    lockRoundId: BigInt
 
     # End
-    endAt: BigInt
-    endBlock: BigInt
-    endHash: Bytes
-    closePrice: BigDecimal # endPrice
+    closeAt: BigInt
+    closeBlock: BigInt
+    closeHash: Bytes
+    closePrice: BigDecimal
+    closeRoundId: BigInt
 
     # Bets
     totalBets: BigInt!
     totalAmount: BigDecimal!
-    totalAmountTreasury: BigDecimal
     bullBets: BigInt!
     bullAmount: BigDecimal!
     bearBets: BigInt!
@@ -63,19 +71,26 @@ type Round @entity {
 type User @entity {
     id: ID!
 
-    # Address
-    address: Bytes!
-
     createdAt: BigInt!
     updatedAt: BigInt!
 
-    # Block
     block: BigInt!
 
     # Bets
     totalBets: BigInt!
-    totalETH: BigDecimal!
+    totalBetsBull: BigInt!
+    totalBetsBear: BigInt!
+    totalMATIC: BigDecimal!
+    totalMATICBull: BigDecimal!
+    totalMATICBear: BigDecimal!
     bets: [Bet!]! @derivedFrom(field: "user")
+
+    # Statistics
+    totalBetsClaimed: BigInt!
+    totalMATICClaimed: BigDecimal!
+    winRate: BigDecimal!
+    averageMATIC: BigDecimal!
+    netMATIC: BigDecimal!
 }
 
 type Bet @entity {
@@ -89,13 +104,16 @@ type Bet @entity {
 
     amount: BigDecimal!
     position: Position!
+
     claimed: Boolean!
-    claimedAmount: BigDecimal
+    claimedAt: BigInt
+    claimedBlock: BigInt
     claimedHash: Bytes
+    claimedMATIC: BigDecimal
+    claimedNetMATIC: BigDecimal
 
     createdAt: BigInt!
     updatedAt: BigInt!
 
-    # Block
     block: BigInt!
 }

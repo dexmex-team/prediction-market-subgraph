@@ -7,7 +7,8 @@
     "codegen": "graph codegen --output-dir src/types/",
     "build": "graph build",
     "format:check": "prettier --check '*/**/*.{js,ts}'",
-    "format:write": "prettier --write '*/**/*.{js,ts}'"
+    "format:write": "prettier --write '*/**/*.{js,ts}'",
+    "deploy": "graph deploy --product hosted-service --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ dexmex-team/dex-sandbox-market"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.16.0",
