@@ -8,9 +8,9 @@ dataSources:
     name: DexMexPriceTestPrediction
     network: matic
     source:
-      address: '0xa5b8486aea930e560f15c48ace64d9646d0627d6'
+      address: '0x3aCe66F7908dE179Df43c901814251FeAF4a8242'
       abi: Prediction
-      startBlock: 10333825
+      startBlock: 19017559
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
